@@ -127,7 +127,7 @@ def any_file(r: Report, patterns: list[str], label: str, how: str) -> bool:
     if not hits:
         r.fail(f"{label}: none of {patterns} found — run `{how}`")
         return False
-        stale = [p for p in hits if p.suffix == ".md" and UNANSWERED.search(read_text_safe(p))]
+    stale = [p for p in hits if p.suffix == ".md" and UNANSWERED.search(read_text_safe(p))]
     if stale and len(stale) == len([p for p in hits if p.suffix == ".md"]):
         r.fail(f"{label}: {stale[0].relative_to(root)} still has an unanswered section")
         return False
