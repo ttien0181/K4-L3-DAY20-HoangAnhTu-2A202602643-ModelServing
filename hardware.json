@@ -1,0 +1,15 @@
+{
+  "cpu": {
+    "cores_physical": 4,
+    "cores_logical": 8,
+    "model": "Unknown CPU"
+  },
+  "ram": {
+    "total_gb": 16
+  },
+  "gpu": {
+    "backends": {
+      "cpu_only": true
+    }
+  }
+}
