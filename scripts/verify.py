@@ -80,7 +80,7 @@ def is_committed(path: pathlib.Path) -> bool | None:
     if TRACKED is None:
         return None
     try:
-        rel = str(path.resolve().relative_to(labkit.repo_root()))
+        rel = str(path.resolve().relative_to(labkit.repo_root())).replace("\\", "/")
     except ValueError:
         return None
     return rel in TRACKED
