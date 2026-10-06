@@ -45,6 +45,15 @@ UNANSWERED = re.compile(r"required -- replace this line", re.IGNORECASE)
 OK, WARN, BAD = "  ✓", "  •", "  ✗"
 
 
+def read_text_safe(path: pathlib.Path) -> str:
+    for enc in ("utf-8", "cp1252", "latin-1"):
+        try:
+            return path.read_text(encoding=enc)
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    return path.read_text()
+
+
 def tracked_files() -> set[str] | None:
     """Paths git is tracking, or None if this is not a usable git checkout.
 
@@ -102,7 +111,7 @@ def need_file(r: Report, path: pathlib.Path, label: str, how: str) -> pathlib.Pa
     if path.stat().st_size == 0:
         r.fail(f"{label}: {rel} is empty — run `{how}`")
         return None
-    if path.suffix == ".md" and UNANSWERED.search(path.read_text(encoding='utf-8')):
+    if path.suffix == ".md" and UNANSWERED.search(read_text_safe(path)):
         r.fail(f"{label}: {rel} still has an unanswered 'replace this line' section")
         return None
     if is_committed(path) is False:
@@ -118,7 +127,7 @@ def any_file(r: Report, patterns: list[str], label: str, how: str) -> bool:
     if not hits:
         r.fail(f"{label}: none of {patterns} found — run `{how}`")
         return False
-        stale = [p for p in hits if p.suffix == ".md" and UNANSWERED.search(p.read_text(encoding='utf-8'))]
+        stale = [p for p in hits if p.suffix == ".md" and UNANSWERED.search(read_text_safe(p))]
     if stale and len(stale) == len([p for p in hits if p.suffix == ".md"]):
         r.fail(f"{label}: {stale[0].relative_to(root)} still has an unanswered section")
         return False
@@ -159,7 +168,7 @@ def check_manifest(r: Report) -> None:
         r.fail("Model manifest: models/active.json is missing — run `make setup`")
         return
     try:
-        cfg = json.loads(path.read_text(encoding='utf-8'))
+        cfg = json.loads(read_text_safe(path))
     except ValueError as exc:
         r.fail(f"Model manifest: models/active.json is not valid JSON — {exc}")
         return
@@ -184,7 +193,7 @@ def check_reflection(r: Report) -> None:
     if not path.exists():
         r.fail("Reflection: submission/REFLECTION.md is missing")
         return
-    text = path.read_text(encoding='utf-8')
+    text = read_text_safe(path)
     end = REQUIRED_END.search(text)
     required = text[: end.start()] if end else text
     hits = [
